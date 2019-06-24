@@ -3,6 +3,8 @@
 
 #define MAXEVENT 1000000 // Nombre maximum d'évènemets
 #define EPSILON 1e-4 // Condition d'arrêt de la simulation
+#define nmax 1000
+#define eventfile 100000
 
 
 typedef struct Event{
@@ -38,6 +40,7 @@ void Ajouter_Ech(event e);
 void Init_Ech();
 event Extraire();
 int condition_arret();
+int condition_arret_sita();
 void arrive(File *file, double arrive);
 double service(File *file);
 

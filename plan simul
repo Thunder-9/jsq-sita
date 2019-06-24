@@ -1,0 +1,7 @@
+plan simul:
+N = 10 - 100
+100 000 event file
+lambda 0.7 - 0.9
+
+n 1 - 2
+n==1 E[N] -> 9 

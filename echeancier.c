@@ -75,9 +75,16 @@ event Extraire(){
 }
 /* Condition d'arrêt de la simulation */
 int condition_arret(){
-	if(Ech.taille>10000*N){return 0;}
+	if(Ech.taille>eventfile*N){return 0;}
 	return 1;	
 }
+
+int condition_arret_sita(){
+    if(n>nmax-1){return 0;}
+    return 1;   
+}
+
+
 
 void arrive(File *file, double arrive)
 {

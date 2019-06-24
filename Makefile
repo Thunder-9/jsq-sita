@@ -4,6 +4,7 @@ EXEC =
 
 compil: echeancier.o
 	$(CC) jsq.c *.o -o jsq $(CFLAGS)
+	$(CC) sita.c *.o -o sita $(CFLAGS)
 
 
 run-simul: compil
@@ -14,3 +15,9 @@ echeancier.o: echeancier.h
 
 clean:
 	rm -f jsq echeancier.o
+
+dir:
+	mkdir res
+	mkdir resf
+	mkdir sres
+	mkdir sresf
