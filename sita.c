@@ -20,7 +20,7 @@ FILE* dist;
 extern echeancier Ech;
 extern File ** files;
 int i_inter;
-int* inter;
+double * inter;
 
 //à opt
 /* Récupère le premier évènement "arrivée client" traité et non associé à une fin de service */
@@ -49,11 +49,13 @@ event Get_Client(int nfile){
 
 /* Retourne l'indice de la file dans laquelle le client doit être envoyé */
 // nclient | temps | ...
-int getFile(){
-	if(n>inter[i_inter] && n<nmax)
+int getFile(double stime){
+	i_inter=0;
+	while(stime>inter[i_inter+1] && i_inter<N){
 		i_inter++;
-	if(i_inter>9)
-		printf("%d\n",i_inter);
+
+	}
+	
 	return i_inter;
 }
 
@@ -62,35 +64,36 @@ int getFile(){
  * est rajoutée dans l'échéancier.
  * Ajoute une nouvelle arrivée de client (non traitée) dans la plus petite file. */
 void Arrive_Event(event e){
-	int r = getFile();
+	float stime;
+	int t= fscanf(dist,"%f\n",&stime);
+	if(t==EOF){
+		fprintf(stderr, "Erreur : EOF atteint dans dist.data \n");
+		exit(1);
+	}
+
+	int r = getFile(stime);
 	Nf[r]++;
 	if(r==0)
 		fprintf(f6,"%lf %ld\n",e.date,Nf[r]);
-	arrive(files[r],e.date);
-	if(n<nmax){
+	arrive(files[r],e.date,stime);
+	
 	event e1;
 	e1.type = 0;
 	e1.date = e.date + Exp(lambda);
 	e1.etat = 0;
 	e1.associe=0;
 	Ajouter_Ech(e1);
-	}
+	
 
 	if(Nf[r]==1){
 		event e2;
 		e2.type = 1;
-		float stime;
-			int t= fscanf(dist,"%f\n",&stime);
-			if(t==EOF){
-				fprintf(stderr, "Erreur : EOF atteint dans pareto-r.txt \n");
-				exit(1);
-			}
-
 		e2.date = e.date + stime;
 		e2.etat=0;
 		e2.nfile=r;
 		Ajouter_Ech(e2);
-		service(files[r]);
+		Client* tmp=service(files[r]);
+		free(tmp);
 		Ech.tab[e.indiceEch].associe=1;
 		fprintf(f1,"%lf %lf %d\n",e.date,e2.date,e2.nfile);
 	}
@@ -108,20 +111,16 @@ void Service_Event(event e){
 			fprintf(f6,"%lf %ld\n",e.date,Nf[e.nfile]);
 		if(Nf[e.nfile]>0){
 			event e1;
-			double arrive=service(files[e.nfile]);
+			Client* tmp=service(files[e.nfile]);
 			e1.type = 1;
-			float stime;
-			int t= fscanf(dist,"%f\n",&stime);
-			if(t==EOF){
-				fprintf(stderr, "Erreur : EOF atteint dans pareto-r.txt \n");
-				exit(1);
-			}
+			
 
-			e1.date = e.date + stime;
+			e1.date = e.date + tmp->stime;
 			e1.etat = 0;
 			e1.nfile=e.nfile;
-			fprintf(f1,"%lf %lf %d\n",arrive,e1.date,e1.nfile);
+			fprintf(f1,"%lf %lf %d\n",tmp->arrive,e1.date,e1.nfile);
 			Ajouter_Ech(e1);
+			free(tmp);
 	}
 	temps=e.date;
 	}
@@ -153,7 +152,7 @@ int simulateur(FILE *f1){
 }
 
 
-void get_inter(int* inter){
+void get_inter(double* inter){
 	FILE *intervalle=fopen("inter.data","r");
 	if(intervalle == NULL){
 		fprintf(stderr, "impossible d'ouvrir le fichier inter.data\n");exit(EXIT_FAILURE);
@@ -183,16 +182,16 @@ int main(int argc,char const *argv[]){
 	clock_t d;
 	clock_t f;
 	srandom(getpid()+time(NULL));
-	dist=fopen("pareto-r.data","r");
+	dist=fopen("dist.data","r");
 	if(dist == NULL)
 		return fprintf(stderr, "impossible d'ouvrir le fichier pareto-r.data\n"),-1;
 	lambda=atof(argv[1]);
 	N=atoi(argv[2]);
 	printf("N %d\n",N);
-	inter=malloc(sizeof(int)*N+1);
+	inter=malloc(sizeof(double)*N+1);
 	get_inter(inter);
 	for(int i = 0;i<N;i++){
-		printf("inter %d\n",inter[i]);
+		printf("inter %lf\n",inter[i]);
 	}
 	Nf=malloc(sizeof(long int)*N);
 	files=malloc(sizeof(File*)*N);

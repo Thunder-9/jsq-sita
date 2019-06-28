@@ -53,8 +53,10 @@ void Init_Ech(){
 event Extraire(){
 	int imin;
 	event min;
-
-	for(int i=0;i<Ech.taille;i++){
+    if(Ech.taille%100000==0 && Ech.taille!=0){
+        Ech.spindice=Ech.taille-50000;
+    }
+	for(int i=Ech.spindice;i<Ech.taille;i++){
 		if(Ech.tab[i].etat == 0){
 			min = Ech.tab[i];
 			imin=i;
@@ -63,7 +65,7 @@ event Extraire(){
 
 	}
 
-	for(int i=0;i<Ech.taille;i++){
+	for(int i=Ech.spindice;i<Ech.taille;i++){
 		if(min.date>Ech.tab[i].date && Ech.tab[i].etat == 0){
 			min=Ech.tab[i];
 			imin=i;
@@ -74,8 +76,8 @@ event Extraire(){
 	return min;
 }
 /* Condition d'arrêt de la simulation */
-int condition_arret(){
-	if(Ech.taille>eventfile*N){return 0;}
+int condition_arret(long int n){
+	if(n>eventfile*N){return 0;}
 	return 1;	
 }
 
@@ -86,7 +88,7 @@ int condition_arret_sita(){
 
 
 
-void arrive(File *file, double arrive)
+void arrive(File *file, double arrive,double stime)
 {
     Client *nouveau = malloc(sizeof(Client));
     if (file == NULL || nouveau == NULL)
@@ -96,27 +98,31 @@ void arrive(File *file, double arrive)
     }
 
     nouveau->arrive = arrive;
+    nouveau->stime=stime;
     nouveau->suivant = NULL;
 
     if (file->first != NULL) /* La file n'est pas vide */
     {
         /* On se positionne à la fin de la file */
-        Client *elementActuel = file->first;
-        while (elementActuel->suivant != NULL)
-        {
-            elementActuel = elementActuel->suivant;
-        }
-        elementActuel->suivant = nouveau;
+        file->last->suivant=nouveau;
+        file->last=nouveau;
+
+        // while (elementActuel->suivant != NULL)
+        // {
+        //     elementActuel = elementActuel->suivant;
+        // }
+        // elementActuel->suivant = nouveau;
     }
     else /* La file est vide, notre élément est le premier */
     {
+        file->last = nouveau;
         file->first = nouveau;
     }
 }	
 
 
 
-double service(File *file)
+Client* service(File *file)
 {
     if (file == NULL)
     {
@@ -125,11 +131,11 @@ double service(File *file)
     }
 
     double arrive = -1;
-
+    Client* elementDefile=NULL;
     /* On vérifie s'il y a quelque chose à défiler */
     if (file->first != NULL)
     {
-        Client *elementDefile = file->first;
+        elementDefile = file->first;
 
         arrive = elementDefile->arrive;
     	// if(file->first->suivant == NULL){
@@ -138,10 +144,10 @@ double service(File *file)
     	// 	return arrive;
     	// }
         file->first = elementDefile->suivant;
-        free(elementDefile);
+        //free(elementDefile);
     }
    // if(file->first == NULL){printf("first inex\n");exit(1);}
-    return arrive;
+    return elementDefile;
 }
 
 	

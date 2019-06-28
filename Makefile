@@ -19,5 +19,4 @@ clean:
 dir:
 	mkdir res
 	mkdir resf
-	mkdir sres
-	mkdir sresf
+	

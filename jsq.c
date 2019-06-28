@@ -84,7 +84,7 @@ void Arrive_Event(event e){
 	Nf[r]++;
 	if(r==0)
 		fprintf(f6,"%lf %ld\n",e.date,Nf[r]);
-	arrive(files[r],e.date);
+	arrive(files[r],e.date,0);
 	//Ech.tab[e.indiceEch].nfile=r;
 	event e1;
 	e1.type = 0;
@@ -119,14 +119,15 @@ void Service_Event(event e){
 		n--;
 		if(Nf[e.nfile]>0){
 			event e1;
-			double arrive=service(files[e.nfile]);
+			Client* tmp=service(files[e.nfile]);
 			//event tmp=Get_Client(e.nfile);
 			e1.type = 1;
 			e1.date = e.date + Exp(mu);
 			e1.etat = 0;
 			e1.nfile=e.nfile;
-			fprintf(f1,"%lf %lf %d\n",arrive,e1.date,e1.nfile);
+			fprintf(f1,"%lf %lf %d\n",tmp->arrive,e1.date,e1.nfile);
 			Ajouter_Ech(e1);
+			free(tmp);
 			//ajoutWt(e.date-tmp.date);
 	}
 	temps=e.date;
@@ -139,18 +140,24 @@ void Service_Event(event e){
 int simulateur(FILE *f1){
 	temps=0;
 	event e;
+	long int nc=0;
 	Init_Ech();
+	Ech.spindice=0;
 
 	for(int i=0;i<N;i++){
 		Nf[i]=0;
 	}
-	while(condition_arret()){
+	while(condition_arret(nc)){
 		e =Extraire();
 		if( e.type ==0){
 			Arrive_Event(e);
 		}
 		if(e.type ==1){
 			Service_Event(e);
+			nc++;
+			printf("%ld\n",nc);
+			printf("%d\n",Ech.taille);
+			printf("%lf\n",temps);
 		}
 	}
 	return 0;
@@ -198,10 +205,11 @@ int main(int argc,char const *argv[]){
 							files[i]=malloc(sizeof(File));
 							//files[i]->first=malloc(sizeof(Client));
 							files[i]->first = NULL;
+							files[i]->last=NULL;
 						}
-						asprintf(&res,"./res/simulation_JSQ_n%d_N%d_lambda%.1lf_mu%.1lf.data",jsq_n,N,lambda,mu);
+						asprintf(&res,"./res/simulation_JSQ_n%d_N%d_lambda%.1lf_mu%.1lf__.data",jsq_n,N,lambda,mu);
 						f1 =fopen(res,"w");
-						asprintf(&resf,"./resf/simulation_JSQF_n%d_N%d_lambda%.1lf_mu%.1lf.data",jsq_n,N,lambda,mu);
+						asprintf(&resf,"./resf/simulation_JSQF_n%d_N%d_lambda%.1lf_mu%.1lf__.data",jsq_n,N,lambda,mu);
 						f6 =fopen(resf,"w");
 						if(f1 == NULL)
 							return fprintf(stderr, "impossible de créer ou ouvrir le fichier de résultat pour les clients\n"),-1;

@@ -1,7 +1,7 @@
 #ifndef ECH_H
 #define ECH_H
 
-#define MAXEVENT 1000000 // Nombre maximum d'évènemets
+#define MAXEVENT 50000000 // Nombre maximum d'évènemets
 #define EPSILON 1e-4 // Condition d'arrêt de la simulation
 #define nmax 1000
 #define eventfile 100000
@@ -19,12 +19,14 @@ typedef struct Event{
 typedef struct echeancier{
 	event tab[MAXEVENT];
 	int taille;
+	int spindice;
 }echeancier;
 
 typedef struct Client Client;
 struct Client
 {
     double arrive;
+    double stime;
     Client *suivant;
 };
 
@@ -32,6 +34,7 @@ typedef struct File File;
 struct File
 {
     Client *first;
+    Client *last;
 };
 
 
@@ -39,10 +42,10 @@ double Exp(double lamb);
 void Ajouter_Ech(event e);
 void Init_Ech();
 event Extraire();
-int condition_arret();
+int condition_arret(long int n);
 int condition_arret_sita();
-void arrive(File *file, double arrive);
-double service(File *file);
+void arrive(File *file, double arrive,double stime);
+Client* service(File *file);
 
 #endif
 
